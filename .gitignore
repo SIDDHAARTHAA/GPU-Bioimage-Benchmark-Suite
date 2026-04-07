@@ -1,0 +1,24 @@
+# Local tooling
+.codex
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments / local runtimes
+.venv/
+.venv313/
+.python313/
+
+# Generated project artifacts
+outputs/
+results/
+
+# Large local datasets
+biosr_dataset-main/
+biosr_dataset-main.zip
+
+# Misc local files
+.DS_Store

@@ -1,0 +1,6 @@
+{
+  "source_type": "local main deconvolution dataset",
+  "image_source": "real DNA TIFF copied from data/real/segmentation/3d_monolayer_xy1_ch2.tif",
+  "psf_source": "synthetic normalized 3D Gaussian PSF generated in scripts/common_real_data.py",
+  "replaced_broken_remote_links": true
+}
