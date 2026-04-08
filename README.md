@@ -23,6 +23,30 @@ For each operation we time:
 
 If `cubic CPU` is close to raw CPU, and `cubic GPU` is close to raw GPU, then the wrapper is thin.
 
+Where to read the code behind those four columns:
+
+- benchmark harness:
+  - `scripts/benchmark_four_way_backend.py`
+- raw CPU paths:
+  - `skimage.transform.rescale`
+  - `scipy.ndimage.gaussian_filter`
+  - `scipy.ndimage.median_filter`
+- raw GPU paths:
+  - `cucim.skimage.transform.rescale`
+  - `cupyx.scipy.ndimage.gaussian_filter`
+  - `cupyx.scipy.ndimage.median_filter`
+- `cubic` wrapper paths:
+  - `vendor/cubic/cubic/skimage.py`
+  - `vendor/cubic/cubic/scipy.py`
+  - `vendor/cubic/cubic/cuda.py`
+
+Plain meaning:
+
+- raw CPU calls the standard CPU library directly
+- raw GPU calls the CUDA-backed GPU library directly
+- `cubic` calls one wrapper function name
+- the wrapper checks whether the array lives on CPU or GPU, then routes to the matching backend
+
 Current operations:
 
 - `rescale_down_order3`
@@ -453,17 +477,30 @@ What it does:
 - creates CPU and GPU copies of the same data
 - times raw CPU vs `cubic` CPU vs raw GPU vs `cubic` GPU
 - prints live progress logs while it runs
+- stages benchmark artifacts outside `results/` while the timings are still running
+- moves the JSON, CSV, and PNG files into `results/` only after the benchmark fully completes
 
 Files written:
 
 - `results/four_way_benchmark.csv`
 - `results/four_way_benchmark.json`
+- `results/four_way_benchmark_meta.json`
 - `results/four_way_rescale_down_order3.png`
 - `results/four_way_rescale_up_order3.png`
 - `results/four_way_gaussian_filter_sigma_1.2.png`
 - `results/four_way_median_filter_size5.png`
 
 Use the JSON if you want a cleaner machine-readable summary than CSV.
+
+Timing note:
+
+- `four_way_benchmark.json` stores per-operation timings (median and measured totals)
+- `four_way_benchmark_meta.json` stores full wall-clock runtime for the whole run
+- wall-clock is always higher than sum of medians because the full run includes:
+  - warmups and repeated calls
+  - dataset prep and CPU/GPU transfers
+  - plotting and file writes
+  - Python/import/runtime overhead
 
 ### 3. Run the cubic CPU vs cubic GPU rescale benchmark
 
@@ -488,6 +525,17 @@ Files written:
 
 - `results/rescale_benchmark.json`
 - `results/rescale_benchmark.png`
+
+## Utilization Note
+
+Seeing CPU/GPU utilization below 100% is normal for these workflows.
+
+Why:
+
+- many operations are memory-bandwidth-bound, not pure compute-bound
+- kernels are short and launched sequentially from Python
+- benchmark synchronization for accurate timing adds idle gaps
+- some phases are CPU-heavy (I/O, plotting, preprocessing), so GPU waits
 
 ### 4. Generate real-data operation artifacts
 
